@@ -73,23 +73,22 @@ class RecursivePrepareStatsForTracker(SimpleTask):
 def calculate_item_id(item):
   return "%d" % item["file_count"]
 
-
 class MakeIndexFile(SimpleTask):
   def __init__(self):
     SimpleTask.__init__(self, "MakeIndexFile")
 
   def process(self, item):
-    with open(os.path.join(item["item_dir"], "files/github.com/ArchiveTeam/mobileme-grab/downloads.html")) as f:
+    with open(os.path.join(item["item_dir"], "files/github.com", item["item_name"], "downloads.html")) as f:
       html = f.read()
     
-    with open(os.path.join(item["item_dir"], "files/github.com/downloads/ArchiveTeam/mobileme-grab/index.txt"), "w") as f:
+    with open(os.path.join(item["item_dir"], "files/github.com/downloads", item["item_name"], "index.txt"), "w") as f:
       f.write("file\tuploaded\tdownloads\n")
       file_count = 0
       for filename, uploaded, downloads in re.findall(r'"/downloads/([^"]+)">.+?datetime="([^"]+)".+?<strong>([0-9,]+)</strong> down', html, re.DOTALL):
         downloads = re.sub("[^0-9]+", "", downloads)
         f.write("\t".join((filename, uploaded, downloads)) + "\n")
         file_count += 1
-        item["file_count"] = file_count
+      item["file_count"] = file_count
 
 
 project = Project(
