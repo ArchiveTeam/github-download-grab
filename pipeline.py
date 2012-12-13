@@ -25,7 +25,34 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.0.10"):
 
 
 USER_AGENT = "Archive Team Loves GitHub"
-VERSION = "20121213.01"
+VERSION = "20121213.02"
+
+class ConditionalTask(Task):
+  def __init__(self, condition_function, inner_task):
+    Task.__init__(self, "Conditional")
+    self.condition_function = condition_function
+    self.inner_task = inner_task
+    self.inner_task.on_complete_item += self._inner_task_complete_item
+    self.inner_task.on_fail_item += self._inner_task_fail_item
+
+  def enqueue(self, item):
+    if self.condition_function(item):
+      self.inner_task.enqueue(item)
+    else:
+      item.log_output("Skipping tasks for this item.")
+      self.complete_item(item)
+
+  def _inner_task_complete_item(self, task, item):
+    self.complete_item(item)
+  
+  def _inner_task_fail_item(self, task, item):
+    self.fail_item(item)
+
+  def fill_ui_task_list(self, task_list):
+    self.inner_task.fill_ui_task_list(task_list)
+
+  def __str__(self):
+    return "Conditional(" + str(self.inner_task) + ")"
 
 class PrepareDirectories(SimpleTask):
   def __init__(self):
@@ -131,18 +158,20 @@ pipeline = Pipeline(
     },
     id_function = calculate_item_id
   ),
-  LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
-    RsyncUpload(
-      target = ConfigInterpolation("fos.textfiles.com::alardland/warrior/github/%s/", downloader),
-      target_source_path = ItemInterpolation("%(item_dir)s/files/"),
-      files = [
-        ItemInterpolation("%(item_dir)s/files/github.com/downloads/")
-      ],
-      extra_args = [
-        "--recursive",
-        "--partial",
-        "--partial-dir", ".rsync-tmp"
-      ]
+  ConditionalTask(lambda item: item["file_count"] > 0,
+    LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
+      RsyncUpload(
+        target = ConfigInterpolation("fos.textfiles.com::alardland/warrior/github/%s/", downloader),
+        target_source_path = ItemInterpolation("%(item_dir)s/files/"),
+        files = [
+          ItemInterpolation("%(item_dir)s/files/github.com/downloads/")
+        ],
+        extra_args = [
+          "--recursive",
+          "--partial",
+          "--partial-dir", ".rsync-tmp"
+        ]
+      ),
     ),
   ),
   SendDoneToTracker(
