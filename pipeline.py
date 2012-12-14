@@ -25,7 +25,7 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.0.10"):
 
 
 USER_AGENT = "Archive Team Loves GitHub"
-VERSION = "20121213.03"
+VERSION = "20121214.01"
 
 class ConditionalTask(Task):
   def __init__(self, condition_function, inner_task):
@@ -170,7 +170,7 @@ pipeline = Pipeline(
   ConditionalTask(lambda item: item["file_count"] > 0,
     LimitConcurrent(NumberConfigValue(min=1, max=4, default="1", name="shared:rsync_threads", title="Rsync threads", description="The maximum number of concurrent uploads."),
       RsyncUpload(
-        target = ConfigInterpolation("fos.textfiles.com::alardland/warrior/github/%s/", downloader),
+        target = ConfigInterpolation("fos.textfiles.com::alardland/warrior/github-2/%s/", downloader),
         target_source_path = ItemInterpolation("%(item_dir)s/files/"),
         files = [
           ItemInterpolation("%(item_dir)s/files/github.com/downloads/")
