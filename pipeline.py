@@ -25,7 +25,7 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.0.10"):
 
 
 USER_AGENT = "Archive Team Loves GitHub"
-VERSION = "20121214.01"
+VERSION = "20121214.02"
 
 class ConditionalTask(Task):
   def __init__(self, condition_function, inner_task):
@@ -116,6 +116,9 @@ class MakeIndexFile(SimpleTask):
         f.write("\t".join((self.unescape_html(filename), uploaded, downloads)) + "\n")
         file_count += 1
       item["file_count"] = file_count
+
+    os.rename(os.path.join(item["item_dir"], "files/github.com", item["item_name"], "downloads.html"),
+              os.path.join(item["item_dir"], "files/github.com/downloads", item["item_name"], "downloads.html"))
 
   def unescape_html(self, s):
     # http://wiki.python.org/moin/EscapingHtml
