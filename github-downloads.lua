@@ -1,3 +1,19 @@
+html_entity_convert = function(entity)
+    if entity == "amp" then
+        return "&"
+    elseif entity == "lt" then
+        return "<"
+    elseif entity == "gt" then
+        return ">"
+    elseif entity == "quot" then
+        return "\""
+    end
+    return "&"..entity..";"
+end
+
+html_entities_decode = function(url)
+    return string.gsub(url, "&([a-z]+);", html_entity_convert)
+end
 
 read_file = function(file)
   if file then
@@ -19,7 +35,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     local html = read_file(file)
 
     for dl_path in string.gmatch(html, "<a href=\"(/downloads/[^\"]+)\">") do
-      table.insert(urls, { url=("https://github.com"..dl_path) })
+      table.insert(urls, { url=("https://github.com"..html_entities_decode(dl_path)) })
     end
 
     dl_count = #urls
