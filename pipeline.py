@@ -111,11 +111,20 @@ class MakeIndexFile(SimpleTask):
     with open(os.path.join(item["item_dir"], "files/github.com/downloads", item["item_name"], "index.txt"), "w") as f:
       f.write("file\tuploaded\tdownloads\n")
       file_count = 0
-      for filename, uploaded, downloads in re.findall(r'"/downloads/([^"]+)">.+?datetime="([^"]+)".+?<strong>([0-9,]+)</strong> down', html, re.DOTALL):
+      for downloads, filename, uploaded in re.findall(r'<strong>([0-9,]+)</strong> down.+?"/downloads/([^"]+)">.+?datetime="([^"]+)"', html, re.DOTALL):
         downloads = re.sub("[^0-9]+", "", downloads)
-        f.write("\t".join((filename, uploaded, downloads)) + "\n")
+        f.write("\t".join((self.unescape_html(filename), uploaded, downloads)) + "\n")
         file_count += 1
       item["file_count"] = file_count
+
+  def unescape_html(self, s):
+    # http://wiki.python.org/moin/EscapingHtml
+    s = s.replace("&lt;", "<")
+    s = s.replace("&gt;", ">")
+    s = s.replace("&qout;", "\"")
+    # this has to be last:
+    s = s.replace("&amp;", "&")
+    return s
 
 
 project = Project(
