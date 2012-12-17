@@ -25,7 +25,7 @@ if StrictVersion(seesaw.__version__) < StrictVersion("0.0.10"):
 
 
 USER_AGENT = "Archive Team Loves GitHub"
-VERSION = "20121215.01"
+VERSION = "20121217.01"
 
 class ConditionalTask(Task):
   def __init__(self, condition_function, inner_task):
@@ -105,6 +105,10 @@ class MakeIndexFile(SimpleTask):
     SimpleTask.__init__(self, "MakeIndexFile")
 
   def process(self, item):
+    if not os.path.exists(os.path.join(item["item_dir"], "files/github.com", item["item_name"], "downloads.html")):
+     item["file_count"] = 0
+     return
+
     with open(os.path.join(item["item_dir"], "files/github.com", item["item_name"], "downloads.html")) as f:
       html = f.read()
     
